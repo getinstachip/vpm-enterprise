@@ -18,6 +18,7 @@ serde_json = "1.0"
 clust = "0.9.0"
 reqwest = { version = "0.11", features = ["blocking", "json"] }
 dotenv = "0.15.0"
+rand = "0.8.5"
 
 
 [build-dependencies]
