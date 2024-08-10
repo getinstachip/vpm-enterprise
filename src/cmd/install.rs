@@ -13,7 +13,7 @@ const VPM_TOML: &str = "vpm.toml";
 const STD_LIB_URL: &str = "https://github.com/vlang/v/tree/master/thirdparty/"; // edit to accept stdlib url
 
 impl Execute for Install {
-    fn execute(&self) -> Result<()> {
+    async fn execute(&self) -> Result<()> {
         if let (Some(url), Some(name)) = (&self.url, &self.package_name) {
             println!("Installing module '{}' from URL: '{}'", name, url);
             install_module_from_url(name, url)?;

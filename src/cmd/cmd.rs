@@ -4,6 +4,7 @@ use clap::Parser;
 pub enum Cmd {
     Install(Install),
     Uninstall(Uninstall),
+    Chat(Chat),
 }
 
 /// Install a package
@@ -34,3 +35,19 @@ pub struct Uninstall {
     #[arg(help="Name of package to Uninstall")]
     pub package_name: String,
 }
+
+#[derive(Debug, Parser)]
+#[clap(
+    about,
+    author,
+    disable_help_subcommand = true,
+    propagate_version = true,
+    version,
+)]
+pub struct Chat {
+    #[arg(help="Chat with file")]
+    pub module_name: String,
+    #[arg(help="Message to send to module")]
+    pub message: String,
+}
+
