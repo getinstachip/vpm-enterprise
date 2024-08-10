@@ -13,6 +13,13 @@ tree-sitter = "0.20.6"
 tree-sitter-verilog = { git = "https://github.com/tree-sitter/tree-sitter-verilog" }
 regex = "1.10.6"
 toml = "0.8.19"
+tokio = { version = "1.39.0", features = ["full"] }
+serde_json = "1.0"
+clust = "0.9.0"
+reqwest = { version = "0.11", features = ["blocking", "json"] }
+dotenv = "0.15.0"
+rand = "0.8.5"
+
 
 [build-dependencies]
 cc="*"
