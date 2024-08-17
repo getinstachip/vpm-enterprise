@@ -1,6 +1,6 @@
 [package]
 name = "vpm"
-version = "0.1.0"
+version = "0.1.8"
 edition = "2021"
 license = "MIT"
 copyright = "Copyright (c) 2024 Instachip"
@@ -8,18 +8,22 @@ authors = ["Instachip <team@getinstachip.com>"]
 
 [dependencies]
 clap = { version = "4.5.13", features = ["derive"] }
-anyhow = "1.0.86"
-tree-sitter = "0.20.6"
+tokio = { version = "1.39.2", features = ["full"] }
+openssl = { version = "0.10", features = ["vendored"] }
+reqwest = { version = "0.12.5", features = ["json", "blocking"] }
+serde = { version = "1.0.208", features = ["derive"] }
 tree-sitter-verilog = { git = "https://github.com/tree-sitter/tree-sitter-verilog" }
+tree-sitter = "0.20.6"
+anyhow = "1.0.86"
 regex = "1.10.6"
+serde_json = "1.0.125"
+walkdir = "2.5.0"
+once_cell = "1.19.0"
+tempfile = "3.12.0"
 toml = "0.8.19"
-tokio = { version = "1.39.0", features = ["full"] }
-serde_json = "1.0"
 clust = "0.9.0"
-reqwest = { version = "0.11", features = ["blocking", "json"] }
 dotenv = "0.15.0"
 rand = "0.8.5"
 
-
 [build-dependencies]
-cc="*"
+cc = "*"
