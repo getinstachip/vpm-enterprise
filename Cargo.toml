@@ -31,8 +31,8 @@ uuid = { version = "1.10.0", features = ["v7"] }
 directories = "5.0.1"
 machine-uid = "0.5.3"
 rpassword = "7.3.1"
-# parsv = { git = "https://github.com/getinstachip/parsv.git", branch = "main" }
-parsv = { path = "../parsv" }
+parsv = { git = "https://github.com/getinstachip/parsv.git", branch = "main" }
+# parsv = { path = "../parsv" }
 dotenv = "0.15.0"
 crossterm = "0.28.1"
 
