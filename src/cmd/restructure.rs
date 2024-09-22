@@ -1,7 +1,7 @@
 use crate::cmd::{Execute, Restructure};
 use anyhow::{Result, Context};
 use parsv::get_submodules;
-use indicatif::{ProgressBar, ProgressStyle};
+// use indicatif::{ProgressBar, ProgressStyle};
 use std::collections::HashSet;
 use std::fs;
 use std::path::{Path, PathBuf};
@@ -13,10 +13,10 @@ impl Execute for Restructure {
             return Err(anyhow::anyhow!("Top module file does not exist. Ensure the path is correct."));
         }
 
-        let pb = ProgressBar::new_spinner();
-        pb.set_style(ProgressStyle::default_spinner());
-        pb.enable_steady_tick(std::time::Duration::from_millis(500));
-        pb.set_message("Restructuring top module");
+        // let pb = ProgressBar::new_spinner();
+        // pb.set_style(ProgressStyle::default_spinner());
+        // pb.enable_steady_tick(std::time::Duration::from_millis(500));
+        // pb.set_message("Restructuring top module");
 
         let mut path_set: HashSet<PathBuf> = HashSet::new();
         path_set.insert(top_module_path.to_path_buf());
@@ -26,8 +26,11 @@ impl Execute for Restructure {
         let top_module_contents = std::fs::read_to_string(top_module_path).context("Failed to read top module file. Ensure the path is correct.")?;
         let submodules = get_submodules(&top_module_contents).context("Failed to get submodules")?;
 
-        pb.set_message("Restructuring submodules");
+        // pb.set_message("Restructuring submodules");
+        println!("Restructuring modules");
+        println!("Top module name: {}", top_module_name);
         for submodule_name in submodules {
+            println!("Submodule name: {}", submodule_name);
             let submodule_path = top_module_path.with_file_name(format!("{submodule_name}.{ext}"));
             if !submodule_path.exists() {
                 println!("Submodule file '{}' not found.", submodule_path.display());
@@ -47,10 +50,17 @@ impl Execute for Restructure {
             path_set.insert(submodule_path);
         }
 
-        print!("Would you like to move or copy the files? (move/copy): ");
-        let mut response = String::new();
-        std::io::stdin().read_line(&mut response)?;
-        let response = response.trim().to_lowercase();
+        let response = loop {
+            print!("Would you like to move or copy the files? (move/copy): ");
+            std::io::Write::flush(&mut std::io::stdout())?;
+            let mut input = String::new();
+            std::io::stdin().read_line(&mut input)?;
+            let input = input.trim().to_lowercase();
+            if input == "move" || input == "copy" {
+                break input;
+            }
+            println!("Invalid input. Please enter 'move' or 'copy'.");
+        };
 
         let new_dir_name = format!("vpm_modules/{}/rtl", top_module_name);
         let new_dir = Path::new(&new_dir_name);

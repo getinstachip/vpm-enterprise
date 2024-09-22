@@ -24,11 +24,11 @@ pub async fn main() -> ExitCode {
     env::remove_var("RUST_LIB_BACKTRACE");
     env::remove_var("RUST_BACKTRACE");
     
-    if let Err(e) = check_license().await {
-        eprintln!("License check failed: {}", e);
-        eprintln!("Check your license and try again. Contact team@getinstachip.com for assistance.");
-        return ExitCode::FAILURE;
-    }
+    // if let Err(e) = check_license().await {
+    //     eprintln!("License check failed: {}", e);
+    //     eprintln!("Check your license and try again. Contact team@getinstachip.com for assistance.");
+    //     return ExitCode::FAILURE;
+    // }
 
     let flag_file = get_config_path().unwrap().with_file_name(".vpm_welcome_shown");
     if !flag_file.exists() {
