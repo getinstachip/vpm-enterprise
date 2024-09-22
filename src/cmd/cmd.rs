@@ -92,6 +92,12 @@ pub enum Cmd {
         long_about = "Create testbenches, run simulations, and generate waveform images for a module."
     )]
     Test(Test),
+
+    #[command(
+        about = "vpm restructure <TOP_MODULE_PATH> // Reorganize the file structure for a top module",
+        long_about = "Restructure a top module. This command moves the specified top module and all its submodules to the 'vpm_modules/' directory, helping you maintain a clean and organized project structure."
+    )]
+    Restructure(Restructure),
 }
 
 #[derive(Debug, Parser)]
@@ -206,4 +212,10 @@ pub struct Config {
 pub struct Test {
     #[arg(help = "Path of the module to test. This should be the path to the module file within your project structure, starting with 'vpm_modules/'.")]
     pub module_path: String,
+}
+
+#[derive(Debug, Parser)]
+pub struct Restructure {
+    #[arg(help = "Path to the top module to restructure. This file and all its submodules will be moved to the 'vpm_modules/' directory.")]
+    pub top_module_path: String,
 }

@@ -12,6 +12,7 @@ mod run;
 mod load;
 mod config;
 mod test;
+mod restructure;
 
 use anyhow::Result;
 
@@ -90,7 +91,12 @@ impl Execute for Cmd {
                 cmd.execute().await?;
                 send_event("test".to_string()).await?;
                 Ok(())
-            }
+            },
+            Cmd::Restructure(cmd) => {
+                cmd.execute().await?;
+                send_event("restructure".to_string()).await?;
+                Ok(())
+            },
         }
     }
 }
