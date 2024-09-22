@@ -79,7 +79,7 @@ impl VpmToml {
             let new_entry = Value::InlineTable({
                 let mut table = InlineTable::new();
                 table.insert("top_module".to_string(), Value::from(module_name));
-                table.insert("commit_hash".to_string(), Value::from(commit.to_string()));
+                table.insert("version".to_string(), Value::from(commit.to_string()));
                 table
             });
             array.push(new_entry);

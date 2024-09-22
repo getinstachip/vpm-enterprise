@@ -1,6 +1,7 @@
 use crate::cmd::{Execute, Restructure};
 use anyhow::{Result, Context};
 use parsv::get_submodules;
+use crate::toml;
 // use indicatif::{ProgressBar, ProgressStyle};
 use std::collections::HashSet;
 use std::fs;
@@ -34,7 +35,7 @@ impl Execute for Restructure {
             let submodule_path = top_module_path.with_file_name(format!("{submodule_name}.{ext}"));
             if !submodule_path.exists() {
                 println!("Submodule file '{}' not found.", submodule_path.display());
-                println!("Please enter the correct path for the '{}' submodule:", submodule_name);
+                print!("Please enter the correct path for the '{}' submodule: ", submodule_name);
                 let mut input = String::new();
                 std::io::stdin().read_line(&mut input)?;
                 let input_path = input.trim();
@@ -75,7 +76,36 @@ impl Execute for Restructure {
             if response == "move" {
                 fs::remove_file(&path)?;
             }
-        }   
+        }
+
+        let version = loop {
+            print!("Please enter a version number for this module: ");
+            std::io::Write::flush(&mut std::io::stdout())?;
+            let mut input = String::new();
+            std::io::stdin().read_line(&mut input)?;
+            let input = input.trim();
+            if !input.is_empty() {
+                break input.to_string();
+            }
+            println!("Invalid input. Please enter a non-empty version number.");
+        };
+        println!("Module version set to: {}", version);
+
+        let origin = loop {
+            print!("Please enter the origin (e.g., GitHub URL) for this module: ");
+            std::io::Write::flush(&mut std::io::stdout())?;
+            let mut input = String::new();
+            std::io::stdin().read_line(&mut input)?;
+            let input = input.trim();
+            if !input.is_empty() {
+                break input.to_string();
+            }
+            println!("Invalid input. Please enter a non-empty origin.");
+        };
+        println!("Module origin set to: {}", origin);
+
+        toml::add_dependency(&origin).context("Failed to add dependency to toml file.")?;
+        toml::add_top_module(&origin,&format!("vpm_modules/{}/rtl/{}.{}", top_module_name, top_module_name, ext), &version).context("Failed to add top module to toml file.")?;
 
         Ok(())
     }

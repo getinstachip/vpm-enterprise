@@ -22,13 +22,13 @@ impl Execute for Update {
 fn update_module(module_path: &str, commit: Option<&str>, is_top_module: bool) -> Result<()> {
     let repo_links = get_repo_links(module_path);
     if repo_links.is_empty() {
-        return Err(anyhow::anyhow!("No repositories found for module '{}'", module_path));
+        return Err(anyhow::anyhow!("No headers found for module '{}'", module_path));
     }
 
     let chosen_repo = if repo_links.len() == 1 {
         repo_links.into_iter().next().unwrap()
     } else {
-        println!("Multiple repositories found for module '{}'. Please choose one:", module_path);
+        println!("Multiple headers found for module '{}'. Please choose one:", module_path);
         for (index, link) in repo_links.iter().enumerate() {
             println!("{}. {}", index + 1, link);
         }
@@ -39,13 +39,33 @@ fn update_module(module_path: &str, commit: Option<&str>, is_top_module: bool) -
             .ok_or_else(|| anyhow::anyhow!("Invalid choice"))?
     };
 
-    let head_commit_hash = get_head_commit_hash(&chosen_repo).unwrap();
-    let commit_hash = commit.unwrap_or(&head_commit_hash);
+    let is_repo = chosen_repo.contains("github.com");
+    let commit_hash = if is_repo {
+        let head = get_head_commit_hash(&chosen_repo).unwrap();
+        commit.unwrap_or(&head).to_string()
+    } else {
+        commit.map(ToString::to_string).unwrap_or_else(|| {
+            print!("Please enter a version for the module: ");
+            io::stdout().flush().unwrap();
+            let mut version = String::new();
+            io::stdin().read_line(&mut version).unwrap();
+            version.trim().to_string()
+        })
+    };
 
     println!("Preparing to update module '{}' to commit '{}'", module_path, commit_hash);
     let old_contents = std::fs::read_to_string(module_path).context(format!("Failed to read module '{}'", module_path))?;
     
-    let (_chosen_file, new_contents) = find_and_choose_module_file(&chosen_repo, module_path, commit_hash)?;
+    let new_contents = if is_repo {
+        let (_chosen_file, contents) = find_and_choose_module_file(&chosen_repo, module_path, &commit_hash)?;
+        contents
+    } else {
+        print!("Please enter the path to the new file: ");
+        io::stdout().flush().unwrap();
+        let mut new_file_path = String::new();
+        io::stdin().read_line(&mut new_file_path)?;
+        std::fs::read_to_string(new_file_path.trim())?
+    };
 
     let temp_path = format!("{}.temp", module_path);
     std::fs::write(&temp_path, &new_contents)?;
@@ -87,7 +107,16 @@ fn update_module(module_path: &str, commit: Option<&str>, is_top_module: bool) -
                 let old_contents = fs::read_to_string(&submodule_path)?;
                 
                 // Use find_and_choose_module_file for submodules
-                let (_, new_contents) = find_and_choose_module_file(&chosen_repo, &submodule_path.to_str().unwrap(), commit_hash)?;
+                let new_contents = if is_repo {
+                    let (_chosen_file, contents) = find_and_choose_module_file(&chosen_repo, &submodule_path.to_str().unwrap(), &commit_hash)?;
+                    contents
+                } else {
+                    print!("Please enter the path to the new file: ");
+                    io::stdout().flush().unwrap();
+                    let mut new_file_path = String::new();
+                    io::stdin().read_line(&mut new_file_path)?;
+                    std::fs::read_to_string(new_file_path.trim())?
+                };
                 
                 // Create a temporary file for the new contents
                 let temp_path = format!("{}.temp", submodule_path.display());
@@ -118,7 +147,7 @@ fn update_module(module_path: &str, commit: Option<&str>, is_top_module: bool) -
 
     if is_top_module {
         remove_top_module(&chosen_repo, &temp_path)?;
-        add_top_module(&chosen_repo, &temp_path, commit_hash)?;
+        add_top_module(&chosen_repo, &temp_path, &commit_hash)?;
     }
 
     Ok(())
