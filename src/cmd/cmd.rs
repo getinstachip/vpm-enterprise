@@ -17,7 +17,7 @@ pub enum Cmd {
     Include(Include),
 
     #[command(
-        about = "vpm update <MODULE_PATH> // Update a module to its latest version",
+        about = "vpm update <MODULE_PATH> [--commit <HASH>] // Update a module to its latest version",
         long_about = "Update a specific module to its latest version. This command checks for updates to the specified module and applies them if available."
     )]
     Update(Update),

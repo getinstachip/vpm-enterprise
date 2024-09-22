@@ -136,11 +136,13 @@ impl VpmToml {
     }
 
     pub fn get_repo_links(&self, module_name: &str) -> HashSet<String> {
+        let module_file_name = module_name.split('/').last().unwrap();
         let mut repo_links = HashSet::new();
-        if let Some(dependencies) = self.toml_doc["dependencies"].as_table() {
-            for (repo_link, dependency) in dependencies.iter() {
-                if let Some(top_modules) = dependency.as_array() {
-                    if top_modules.iter().any(|m| m.as_inline_table().unwrap().get("top_module").unwrap().as_str().unwrap() == module_name) {
+        if let Some(dependencies) = self.toml_doc.get("dependencies") {
+            for (repo_link, dependency) in dependencies.as_table().unwrap().iter() {
+                for module_table in dependency.as_array().unwrap().iter() {
+                    let top_module = module_table.as_inline_table().unwrap().get("top_module").unwrap().as_str().unwrap().split('/').last().unwrap();
+                    if top_module == module_file_name {
                         repo_links.insert(repo_link.to_string());
                     }
                 }

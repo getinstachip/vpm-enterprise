@@ -313,7 +313,7 @@ fn print_success_message(url: &str, selected_items: &HashSet<String>) {
     }
 }
 
-fn name_from_url(url: &str) -> &str {
+pub fn name_from_url(url: &str) -> &str {
     url.rsplit('/').find(|&s| !s.is_empty()).unwrap_or_default()
 }
 
