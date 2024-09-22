@@ -28,3 +28,6 @@ vpm.lock
 .env
 
 .DS_Store
+.vscode/
+parsv-read
+parsv-read.pub

@@ -1,0 +1,103 @@
+name: Upload Release to S3
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+
+jobs:
+  upload-to-s3:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_RELEASE_UPLOAD_ACCESS_KEY }}
+          aws-secret-access-key: ${{ secrets.AWS_RELEASE_UPLOAD_SECRET_ACCESS_KEY }}
+          aws-region: us-east-1
+
+      - name: Install jq
+        run: sudo apt-get update && sudo apt-get install -y jq
+
+      - name: Download latest release assets
+        env:
+          GH_PAT: ${{ secrets.GH_PAT }}
+        run: |
+          echo "Fetching the latest release information..."
+          
+          # Extract repository owner and name from the GITHUB_REPOSITORY variable
+          OWNER=$(echo "${GITHUB_REPOSITORY}" | cut -d'/' -f1)
+          REPO=$(echo "${GITHUB_REPOSITORY}" | cut -d'/' -f2)
+          
+          echo "Owner: $OWNER"
+          echo "Repository: $REPO"
+          
+          # Fetch the latest release data from GitHub API
+          LATEST_RELEASE_JSON=$(curl -s \
+            -H "Authorization: token $GH_PAT" \
+            -H "Accept: application/vnd.github.v3+json" \
+            "https://api.github.com/repos/$OWNER/$REPO/releases/latest")
+          
+          # Check if the latest release was fetched successfully
+          if [ -z "$LATEST_RELEASE_JSON" ] || [ "$LATEST_RELEASE_JSON" == "null" ]; then
+            echo "Failed to fetch the latest release information."
+            exit 1
+          fi
+          
+          # Extract the tag name (version) and release ID
+          TAG_NAME=$(echo "$LATEST_RELEASE_JSON" | jq -r '.tag_name')
+          RELEASE_ID=$(echo "$LATEST_RELEASE_JSON" | jq -r '.id')
+          
+          echo "Latest Release Tag: $TAG_NAME"
+          echo "Release ID: $RELEASE_ID"
+          
+          # Extract asset URLs and names
+          ASSETS=$(echo "$LATEST_RELEASE_JSON" | jq -r '.assets[] | "\(.name) \(.url)"')
+          
+          ASSET_COUNT=$(echo "$ASSETS" | wc -l)
+          echo "Found $ASSET_COUNT assets to download."
+          
+          # Check if there are any assets to download
+          if [ "$ASSET_COUNT" -eq 0 ]; then
+            echo "No assets found for the latest release."
+            exit 0
+          fi
+          
+          # Download each asset
+          while read -r NAME URL; do
+            echo "Downloading asset: $NAME"
+            curl -L \
+              -H "Authorization: token $GH_PAT" \
+              -H "Accept: application/octet-stream" \
+              "$URL" -o "$NAME"
+            
+            # Verify if the download was successful
+            if [ $? -ne 0 ]; then
+              echo "Failed to download asset: $NAME"
+              exit 1
+            fi
+          done <<< "$ASSETS"
+
+      - name: Verify downloaded files
+        run: |
+          echo "Verifying downloaded files..."
+          for file in *.exe *.tar.gz *.zip *.pkg *.deb; do
+            if [ -f "$file" ]; then
+              echo "File: $file"
+              file "$file"
+              head -c 100 "$file" | xxd
+            fi
+          done
+
+      - name: Upload to S3
+        run: |
+          VERSION=${{ github.ref_name }}
+          aws s3 sync . s3://pro-release-files --exclude "*" --include "*.exe" --include "*.tar.gz" --include "*.zip" --include "*.pkg" --include "*.deb" --delete
+          for file in *.exe *.tar.gz *.zip *.pkg *.deb; do
+            if [ -f "$file" ]; then
+              aws s3api put-object-tagging --bucket pro-release-files --key "$file" --tagging "TagSet=[{Key=version,Value=$VERSION}]"
+            fi
+          done

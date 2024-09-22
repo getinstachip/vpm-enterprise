@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<pkg-info overwrite-permissions="true" relocatable="false" identifier="com.instachip.vpm-pro" postinstall-action="none" version="@VERSION@" format-version="2" generator-version="InstallCmds-502 (14F27)" auth="root">
+    <payload numberOfFiles="1" installKBytes="@SIZE@"/>
+    <bundle-version>
+        <bundle id="com.instachip.vpm-pro" CFBundleIdentifier="com.instachip.vpm-pro" path="./Applications/VPM Pro.app" CFBundleVersion="@VERSION@"/>
+    </bundle-version>
+    <update-bundle/>
+    <atomic-update-bundle/>
+    <strict-identifier/>
+    <relocate/>
+    <scripts>
+        <preinstall file="./preinstall"/>
+        <postinstall file="./postinstall"/>
+    </scripts>
+</pkg-info>

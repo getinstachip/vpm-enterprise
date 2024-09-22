@@ -25,8 +25,8 @@ main() {
 
     local _bin_name
     case "${_arch}" in
-    *windows*) _bin_name="vpm.exe" ;;
-    *) _bin_name="vpm" ;;
+    *windows*) _bin_name="vpm-pro.exe" ;;
+    *) _bin_name="vpm-pro" ;;
     esac
 
     # Create and enter a temporary directory.
@@ -57,13 +57,13 @@ main() {
     ensure try_sudo mkdir -p -- "${BIN_DIR}"
     ensure try_sudo cp -- "${_bin_name}" "${BIN_DIR}/${_bin_name}"
     ensure try_sudo chmod +x "${BIN_DIR}/${_bin_name}"
-    echo "Installed vpm to ${BIN_DIR}"
+    echo "Installed vpm-pro to ${BIN_DIR}"
 
     # Print success message and check $PATH.
     echo ""
-    echo "vpm is installed!"
+    echo "vpm-pro is installed!"
     if ! echo ":${PATH}:" | grep -Fq ":${BIN_DIR}:"; then
-        echo "Note: ${BIN_DIR} is not on your \$PATH. vpm will not work unless it is added to \$PATH."
+        echo "Note: ${BIN_DIR} is not on your \$PATH. vpm-pro will not work unless it is added to \$PATH."
     fi
 }
 
@@ -104,11 +104,11 @@ usage() {
     _arch="$(get_architecture || true)"
 
     echo "\
-${_text_heading}vpm installer${_text_reset}
+${_text_heading}vpm-pro installer${_text_reset}
 Instachip <team@getinstachip.com>
-https://github.com/getinstachip/vpm
+https://github.com/getinstachip/vpm-pro
 
-Fetches and installs vpm. If vpm is already installed, it will be updated to the latest version.
+Fetches and installs vpm-pro. If vpm-pro is already installed, it will be updated to the latest version.
 
 ${_text_heading}Usage:${_text_reset}
   install.sh [OPTIONS]
@@ -133,7 +133,7 @@ download_vpm() {
     fi
     need_cmd grep
 
-    local _releases_url="https://api.github.com/repos/getinstachip/vpm/releases/latest"
+    local _releases_url="https://api.github.com/repos/getinstachip/vpm-pro/releases/latest"
     local _releases
     case "${_dld}" in
     curl) _releases="$(curl -sL "${_releases_url}")" ||
@@ -143,11 +143,11 @@ download_vpm() {
     *) err "unsupported downloader: ${_dld}" ;;
     esac
     (echo "${_releases}" | grep -q 'API rate limit exceeded') &&
-        err "you have exceeded GitHub's API rate limit. Please try again later, or use a different installation method: https://github.com/getinstachip/vpm/#installation"
+        err "you have exceeded GitHub's API rate limit. Please try again later, or use a different installation method: https://github.com/getinstachip/vpm-pro/#installation"
 
     local _package_url
     _package_url="$(echo "${_releases}" | grep "browser_download_url" | cut -d '"' -f 4 | grep -- "${_arch}")" ||
-        err "vpm has not yet been packaged for your architecture (${_arch}), please file an issue: https://github.com/getinstachip/vpm/issues"
+        err "vpm-pro has not yet been packaged for your architecture (${_arch}), please file an issue: team@getinstachip.com"
 
     local _ext
     case "${_package_url}" in
@@ -156,7 +156,7 @@ download_vpm() {
     *) err "unsupported package format: ${_package_url}" ;;
     esac
 
-    local _package="vpm.${_ext}"
+    local _package="vpm-pro.${_ext}"
     case "${_dld}" in
     curl) _releases="$(curl -sLo "${_package}" "${_package_url}")" || err "curl: failed to download ${_package_url}" ;;
     wget) _releases="$(wget -qO "${_package}" "${_package_url}")" || err "wget: failed to download ${_package_url}" ;;

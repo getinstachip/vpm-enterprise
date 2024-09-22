@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<installer-gui-script minSpecVersion="1">
+    <title>Instachip VPM</title>
+    <organization>Instachip</organization>
+    <domains enable_localSystem="true"/>
+    <options customize="never" require-scripts="true" allow-external-scripts="no"/>
+    
+    <welcome file="welcome.rtf" mime-type="text/rtf"/>
+    <conclusion file="conclusion.rtf" mime-type="text/rtf"/>
+    
+    <choices-outline>
+        <line choice="default">
+            <line choice="com.instachip.vpm-pro"/>
+        </line>
+    </choices-outline>
+
+    <choice id="default"/>
+    <choice id="com.instachip.vpm-pro" visible="false">
+        <pkg-ref id="com.instachip.vpm-pro"/>
+    </choice>
+    
+    <pkg-ref id="com.instachip.vpm-pro" version="@VERSION@" onConclusion="none">VPM-Pro-App.pkg</pkg-ref>
+    
+    <background file="background.png" scaling="proportional" alignment="bottomleft"/>
+</installer-gui-script>

@@ -1,0 +1,26 @@
+#!/bin/bash
+# Set permissions for the binary
+chmod 755 /usr/local/bin/vpm-pro
+
+# Define the path to the binary
+BINARY_PATH="/usr/local/bin/vpm-pro"
+
+# Define the path to the shell configuration file
+SHELL_CONFIG="$HOME/.zshrc"
+
+# Check if the shell configuration file exists, if not, create it
+touch "$SHELL_CONFIG"
+
+# Add the binary path to PATH if it's not already there
+if ! grep -q "export PATH=.*$BINARY_PATH" "$SHELL_CONFIG"; then
+    echo "export PATH=\$PATH:$(dirname $BINARY_PATH)" >> "$SHELL_CONFIG"
+    echo "Binary path added to PATH in $SHELL_CONFIG"
+else
+    echo "Binary path already exists in PATH"
+fi
+
+# Source the configuration file to apply changes immediately
+source "$SHELL_CONFIG"
+
+# Inform the user
+echo "The binary has been added to your PATH. Please restart your terminal or run 'source $SHELL_CONFIG' to apply the changes."

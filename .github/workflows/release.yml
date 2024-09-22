@@ -1,6 +1,8 @@
 name: release
 on:
   push:
+    branches:
+      - main
   workflow_dispatch:
 env:
   CARGO_INCREMENTAL: 0
@@ -10,6 +12,7 @@ jobs:
   release:
     name: ${{ matrix.target }}
     runs-on: ${{ matrix.os }}
+    if: startsWith(github.event.head_commit.message, 'chore(release)') || github.event_name == 'workflow_dispatch'
     strategy:
       fail-fast: false
       matrix:
@@ -28,14 +31,14 @@ jobs:
           - os: ubuntu-latest
             target: i686-unknown-linux-musl
             deb: true
-          - os: ubuntu-latest
-            target: aarch64-linux-android
           - os: macos-latest
             target: x86_64-apple-darwin
           - os: macos-latest
             target: aarch64-apple-darwin
           - os: windows-latest
             target: x86_64-pc-windows-msvc
+          - os: windows-latest
+            target: i686-pc-windows-msvc
           - os: windows-latest
             target: aarch64-pc-windows-msvc
     steps:
@@ -71,8 +74,18 @@ jobs:
           command: install
           args: --color=always --git=https://github.com/cross-rs/cross.git --locked --rev=02bf930e0cb0c6f1beffece0788f3932ecb2c7eb --verbose cross
 
+      - name: Configure git credentials
+        shell: bash
+        run: |
+          git config --global url."https://${{ secrets.PARSV_PAT }}:x-oauth-basic@github.com/".insteadOf "https://github.com/"
+
       - name: Build binary
         uses: actions-rs/cargo@v1
+        env:
+          POSTHOG_API_KEY: ${{ secrets.POSTHOG_API_KEY }}
+          KEYGEN_ACCOUNT_ID: ${{ secrets.KEYGEN_ACCOUNT_ID }}
+          KEYGEN_TOKEN: ${{ secrets.KEYGEN_TOKEN }}
+          CARGO_NET_GIT_FETCH_WITH_CLI: true
         with:
           command: build
           args: --release --target=${{ matrix.target }} --color=always --verbose
@@ -92,19 +105,46 @@ jobs:
           args: --no-build --no-strip --output=. --target=${{ matrix.target }}
 
       - name: Package (*nix)
-        if: runner.os != 'Windows'
+        if: ${{ runner.os != 'Windows' }}
         run: |
-          tar -cv LICENSE README.md \
-            -C target/${{ matrix.target }}/release/ vpm |
+          tar -cv README.md \
+            -C target/${{ matrix.target }}/release/ vpm-pro |
             gzip --best > \
-            vpm-${{ steps.get_version.outputs.value }}-${{ matrix.target }}.tar.gz
+            InstachipPro-${{ matrix.target }}.tar.gz
 
-      - name: Package (Windows)
-        if: runner.os == 'Windows'
+      - name: Create variable files
+        if: ${{ runner.os == 'Windows' }}
         run: |
-          7z a vpm-${{ steps.get_version.outputs.value }}-${{ matrix.target }}.zip `
-            LICENSE README.md `
-            ./target/${{ matrix.target }}/release/vpm.exe
+          echo "${{ steps.get_version.outputs.value }}" > version.txt
+          echo "${{ matrix.target }}" >> target.txt
+
+      - name: Package Installer (Windows)
+        if: ${{ runner.os == 'Windows' }}
+        uses: Minionguyjpro/Inno-Setup-Action@v1.2.4
+        with:
+          path: installer.iss
+          options: /O+
+
+      - name: Package Installer (macOS)
+        if: ${{ runner.os == 'macOs' }}
+        run: |
+          mkdir -p macos-installer/VPM\ Pro.pkg/payload/usr/local/bin
+          cp target/${{ matrix.target }}/release/vpm macos-installer/VPM\ Pro.pkg/payload/usr/local/bin
+          sed -i '' "s/@VERSION@/${{ steps.get_version.outputs.value }}/g" macos-installer/Distribution.xml
+          sed -i '' "s/@VERSION@/${{ steps.get_version.outputs.value }}/g" macos-installer/VPM\ Pro.pkg/PackageInfo.xml
+          sed -i '' "s/@SIZE@/$(du -k macos-installer/payload/usr/local/bin/vpm | cut -f1)/g" macos-installer/VPM\ Pro.pkg/PackageInfo.xml
+          pkgbuild --root macos-installer/VPM\ Pro.pkg/payload --scripts macos-installer/VPM\ Pro.pkg/scripts --identifier com.instachip.vpm-pro --version ${{ steps.get_version.outputs.value }} --install-location / VPM-Pro-App.pkg
+          productbuild --distribution macos-installer/Distribution.xml --resources macos-installer InstachipPro-${{ matrix.target }}.pkg       
+
+      - name: Rename .deb assets
+        if: ${{ matrix.deb == true }}
+        run: |
+          for file in vpm_*-1_*; do
+            if [ -f "$file" ]; then
+              new_name=$(echo "$file" | sed 's/vpm_\(.*\)-1_\(.*\)/InstachipPro-1_\2/')
+              mv "$file" "$new_name"
+            fi
+          done
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
@@ -114,6 +154,8 @@ jobs:
             *.deb
             *.tar.gz
             *.zip
+            *.exe
+            InstachipPro-*.pkg
 
       - name: Create release
         if: |
@@ -125,5 +167,7 @@ jobs:
             *.deb
             *.tar.gz
             *.zip
+            *.exe
+            InstachipPro-*.pkg
           name: ${{ steps.get_version.outputs.value }}
           tag_name: ''
