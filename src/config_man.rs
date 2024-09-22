@@ -11,31 +11,31 @@ use machine_uid;
 const POSTHOG_API_KEY: Option<&str> = option_env!("POSTHOG_API_KEY");
 
 pub async fn send_event(command: String) -> Result<()> {
-    // if get_analytics()? {
-    //     let uuid = get_uuid()?;
-    //     let version = env!("CARGO_PKG_VERSION").to_string();
-    //     let api_key = POSTHOG_API_KEY.expect("POSTHOG_API_KEY environment variable not set").to_string();
+    if get_analytics()? {
+        let uuid = get_uuid()?;
+        let version = env!("CARGO_PKG_VERSION").to_string();
+        let api_key = POSTHOG_API_KEY.expect("POSTHOG_API_KEY environment variable not set").to_string();
         
-    //     let client = Client::new();
-    //     let payload = json!({
-    //         "api_key": api_key,
-    //         "event": "user_action",
-    //         "distinct_id": uuid,
-    //         "properties": {
-    //             "command": command,
-    //             "version": version
-    //         }
-    //     });
+        let client = Client::new();
+        let payload = json!({
+            "api_key": api_key,
+            "event": "user_action",
+            "distinct_id": uuid,
+            "properties": {
+                "command": command,
+                "version": version
+            }
+        });
 
-    //     let _response = client.post("https://us.i.posthog.com/capture/")
-    //         .json(&payload)
-    //         .send()
-    //         .await?;
+        let _response = client.post("https://us.i.posthog.com/capture/")
+            .json(&payload)
+            .send()
+            .await?;
 
-    //     // if !response.status().is_success() {
-    //     //     eprintln!("Failed to send event to PostHog: {}", response.status());
-    //     // }
-    // }
+        // if !response.status().is_success() {
+        //     eprintln!("Failed to send event to PostHog: {}", response.status());
+        // }
+    }
     Ok(())
 }
 
