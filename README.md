@@ -10,6 +10,21 @@ VPM is a powerful package manager for Verilog projects, currently being piloted 
 - **Simulation Support**: Simulate your Verilog files directly through VPM.
 - **Tool Integration**: Seamlessly install and set up open-source tools for your project.
 
+## Example Workflow
+Here is an example workflow for using VPM:
+1. Start by [installing VPM](#installation).
+2. Collect your Verilog files and submodules.
+   1. Use `vpm include` to add modules from GitHub repositories into the `vpm_modules` directory.
+   2. Use [`vpm restructure`](#vpm-restructure) on a top-level module to move it and its submodules into the `vpm_modules` directory.
+      1. For example, use the `sse300_user_cfg.yaml` file to create the required RTL. Running `vpm restructure <PATH_TO_TOP_SSE-300_MODULE>` will move all the files into the `vpm_modules` directory and add the new module to the `vpm.toml` file. You will be prompted to enter a version number and origin for the module.
+   3. Note: [`vpm restructure`](#vpm-restructure) can be used to add submodules files to the vpm_modules directory after update. Just run `vpm restructure <TOP_MODULE_PATH>` after updating the top module or any submodules and you will be prompted to add any new submodules to the directory.
+3. When you need to update a module's version, use [`vpm update`](#vpm-update).
+   1. For example, use the config file to generate a set of RTL with different parameters. Then run `vpm update <PATH_TO_TOP_MODULE_IN_VPM_MODULES>` and pass the paths to the new files when prompted. You will be shown the difference between the new and old files and be prompted to enter a new version number for the module.
+4. When you need to remove a module, use [`vpm remove`](#vpm-remove).
+
+
+Please contact us with any questions or feedback.
+
 ## Installation
 
 VPM is designed for easy installation with no additional dependencies. 
@@ -151,8 +166,6 @@ Example:
 ```bash
 vpm restructure vpm_modules/counter/rtl/counter.v
 ```
-
-Note: `vpm restructure` can be used to add submodules files to the vpm_modules directory after update. Just run `vpm restructure <TOP_MODULE_PATH>` after updating the top module or any submodules and you will be prompted to add any new submodules to the directory.
 
 ### vpm remove
 Remove a package from your project.
