@@ -14,7 +14,7 @@ impl Execute for Update {
     async fn execute(&self) -> Result<()> {
         let module_path = &self.module_path;
         println!("Updating module '{}'", module_path);
-        update_module(module_path, self.commit.as_deref(), true).context("Failed to update module. Ensure the path is correct and the file exists.")?;
+        update_module(module_path, self.version.as_deref(), true).context("Failed to update module. Ensure the path is correct and the file exists.")?;
         Ok(())
     }
 }

@@ -46,7 +46,6 @@ After installation, the vpm command will be available in any terminal.
 
 ## Commands
 
-- `vpm include <path_to_module.v>`: Include any module from a repo (and all its submodules).
 - `vpm docs <module.v>`: Generate documentation for any module (highlighting bugs and edge cases)
 - `vpm install <tool>`: Auto-integrate an open-source tool without manual setup
 - `vpm update <module.v>`: Update module to a more recent version
@@ -54,39 +53,6 @@ After installation, the vpm command will be available in any terminal.
 - `vpm remove <module.v>`: Remove a module from your project
 - `vpm sim <module.sv> <testbench.sv>`: Simulate Verilog module using iverilog
   
-### vpm include
-Include a module or repository in your project.
-
-This command:
-- Downloads the specified module or repository
-- Analyzes the module hierarchy
-- Includes all necessary submodules and generates appropriate header files
-- Updates the vpm.toml file with new module details
-
-This command comes in two forms:
-1. Include a module and all its submodules:
-```bash
-vpm include <URL_TO_TOP_MODULE.sv>
-```
-`URL_TO_TOP_MODULE`: Full GitHub URL to the top module to include. The URL should come in the format of `https://github.com/<AUTHOR_NAME>/<REPO_NAME>/blob/branch/<PATH_TO_MODULE.sv>`.
-
-Example:
-```bash
-vpm include https://github.com/ZipCPU/zipcpu/blob/master/rtl/core/prefetch.v
-```
-
-1. Include a repository:
-```bash
-vpm include --repo <AUTHOR_NAME/REPO_NAME>
-```
-
-Press tab to select multiple modules and press ENTER to install. If no modules are selected, all modules in the repository will be installed.
-
-Example:
-```bash
-vpm include --repo ZipCPU/zipcpu
-```
-
 ### vpm docs
 Generate comprehensive documentation for a module.
 
@@ -100,67 +66,19 @@ This command generates a Markdown README file containing:
 - List of any major bugs or caveats if they exist
 
 ```bash
-vpm docs <MODULE.sv>
+vpm docs <MODULE.sv> [--from_repo] [--offline]
 ```
 
 `<MODULE>`: Name of the module to generate documentation for. Include the file extension.
 
-`[URL]`: Optional URL of the repository to generate documentation for. If not specified, VPM will assume the module is local, and will search for the module in the vpm_modules directory.
+`[--from_repo]`: Optional flag to treat the module path as a link to a .v or .sv file in a GitHub repository. If not set, the path will be treated as a local file path.
+
+`[--offline]`: Optional flag to generate documentation in offline mode for code security.
 
 Examples:
 ```bash
-vpm docs pfcache.v
-vpm docs pfcache.v https://github.com/ZipCPU/zipcpu
-```
-
-### vpm update
-Update a package to the latest version.
-
-This command:
-- Checks for the latest version of the specified module
-- Downloads and replaces the current version with the latest
-- Updates all dependencies and submodules
-- Modifies the vpm.toml file to reflect the changes
-
-```bash
-vpm update <PACKAGE_PATH>
-```
-
-`<PACKAGE_PATH>`: Full module path of the package to update
-
-Example:
-```bash
-vpm update vpm_modules/counter/rtl/counter.v
-```
-
-### vpm remove
-Remove a package from your project.
-
-This command:
-- Removes the specified module from your project
-- Updates the vpm.toml file to remove the module entry
-- Cleans up any orphaned dependencies
-
-```bash
-vpm remove <PACKAGE_PATH>
-```
-
-`<PACKAGE_PATH>`: Full module path of the package to remove
-
-Example:
-```bash
-vpm remove vpm_modules/counter/rtl/counter.v
-```
-
-### vpm restructure
-Restructure your project into the vpm_modules directory.
-
-This command:
-- Moves all modules to its specific `vpm_modules` subdirectory
-- Updates the vpm.toml file to reflect the changes
-
-```bash
-vpm restructure vpm_modules/counter/rtl/counter.v
+vpm docs pfcache.v --offline
+vpm docs https://github.com/ZipCPU/zipcpu/pfcache.v --from_repo
 ```
 
 ### vpm install
@@ -191,6 +109,69 @@ Currently supported tools:
 Coming soon:
 - Yosys (with support for ABC)
 - RISC-V GNU Toolchain
+
+### vpm update
+Update a package to the latest version.
+
+This command:
+- Checks for the latest version of the specified module
+- Downloads and replaces the current version with the latest
+- Optionally updates to a specific version
+- Optionally Updates all dependencies and submodules
+- Modifies the vpm.toml file to reflect the changes
+
+```bash
+vpm update <MODULE_PATH> [--version <VERSION>]
+```
+
+`<PACKAGE_PATH>`: Full module path of the module to update
+
+`[--version <VERSION>]`: Optional flag to update to a specific version. If not set and the module is from a git repo, the latest commit hash will be used.
+
+Example:
+```bash
+vpm update vpm_modules/counter/rtl/counter.v
+```
+
+### vpm restructure
+Restructure your project into the vpm_modules directory.
+
+This command:
+- Moves the top module and all submodules to its specific `vpm_modules` subdirectory
+- Updates the vpm.toml file to reflect the changes
+
+```bash
+vpm restructure <TOP_MODULE_PATH>
+```
+
+`<TOP_MODULE_PATH>`: Full module path of the top module to restructure around.
+
+
+Example:
+```bash
+vpm restructure vpm_modules/counter/rtl/counter.v
+```
+
+Note: `vpm restructure` can be used to add submodules files to the vpm_modules directory after update. Just run `vpm restructure <TOP_MODULE_PATH>` after updating the top module or any submodules and you will be prompted to add any new submodules to the directory.
+
+### vpm remove
+Remove a package from your project.
+
+This command:
+- Removes the specified module from your project
+- Updates the vpm.toml file to remove the module entry
+- Cleans up any orphaned dependencies
+
+```bash
+vpm remove <PACKAGE_PATH>
+```
+
+`<PACKAGE_PATH>`: Full module path of the package to remove
+
+Example:
+```bash
+vpm remove vpm_modules/counter/rtl/counter.v
+```
 
 ### vpm sim
 Simulate Verilog files.
