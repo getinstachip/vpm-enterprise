@@ -42,7 +42,7 @@ main() {
     case "${_package}" in
     *.tar.gz)
         need_cmd tar
-        ensure tar -xf "${_package}"
+        ensure tar -xvf "${_package}"
         ;;
     *.zip)
         need_cmd unzip
@@ -53,9 +53,16 @@ main() {
         ;;
     esac
 
+    # Find the extracted binary
+    local _extracted_bin
+    _extracted_bin="$(find . -type f -name "vpm*" | head -n 1)"
+    if [ -z "${_extracted_bin}" ]; then
+        err "Could not find the vpm binary in the extracted package"
+    fi
+
     # Install binary.
     ensure try_sudo mkdir -p -- "${BIN_DIR}"
-    ensure try_sudo cp -- "${_bin_name}" "${BIN_DIR}/${_bin_name}"
+    ensure try_sudo cp -- "${_extracted_bin}" "${BIN_DIR}/${_bin_name}"
     ensure try_sudo chmod +x "${BIN_DIR}/${_bin_name}"
     echo "Installed vpm-enterprise to ${BIN_DIR}"
 
@@ -146,20 +153,14 @@ download_vpm() {
         err "you have exceeded GitHub's API rate limit. Please try again later, or use a different installation method: https://github.com/getinstachip/vpm-enterprise/#installation"
 
     local _package_url
-    _package_url="$(echo "${_releases}" | grep "browser_download_url" | cut -d '"' -f 4 | grep -- "${_arch}")" ||
+    _package_url="$(echo "${_releases}" | grep "browser_download_url" | cut -d '"' -f 4 | grep -- "${_arch}" | grep '\.tar\.gz$')" ||
         err "vpm-enterprise has not yet been packaged for your architecture (${_arch}), please file an issue: team@getinstachip.com"
 
-    local _ext
-    case "${_package_url}" in
-    *.tar.gz) _ext="tar.gz" ;;
-    *.zip) _ext="zip" ;;
-    *) err "unsupported package format: ${_package_url}" ;;
-    esac
-
+    local _ext="tar.gz"
     local _package="vpm-enterprise.${_ext}"
     case "${_dld}" in
-    curl) _releases="$(curl -sLo "${_package}" "${_package_url}")" || err "curl: failed to download ${_package_url}" ;;
-    wget) _releases="$(wget -qO "${_package}" "${_package_url}")" || err "wget: failed to download ${_package_url}" ;;
+    curl) curl -sLo "${_package}" "${_package_url}" || err "curl: failed to download ${_package_url}" ;;
+    wget) wget -qO "${_package}" "${_package_url}" || err "wget: failed to download ${_package_url}" ;;
     *) err "unsupported downloader: ${_dld}" ;;
     esac
 
